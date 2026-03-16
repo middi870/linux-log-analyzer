@@ -2,8 +2,11 @@ import argparse
 
 from reader.file_reader import FileReader
 from reader.stream_reader import StreamReader
+from reader.directory_reader import DirectoryReader
+
 from parser.auth_parser import AuthLogParser
 from parser.nginx_parser import NginxParser
+
 from analyzer.rule_engine import RuleEngine
 from analyzer.statistics import Statistics
 
@@ -48,8 +51,9 @@ def main():
         description="Linux Log Analyzer"
     )
 
-    arg_parser.add_argument("--file", help="Path to log file")
-    arg_parser.add_argument("--follow", help="Follow log file")
+    arg_parser.add_argument("--file", help="Analyze single log file")
+    arg_parser.add_argument("--dir", help="Analyze directory of log files")
+    arg_parser.add_argument("--follow", help="Follow log file in real-time")
 
     args = arg_parser.parse_args()
 
@@ -66,7 +70,18 @@ def main():
 
         for line in reader.read_lines():
             process_line(parsers, engine, stats, line)
+
         stats.report()
+
+    elif args.dir:
+
+        reader = DirectoryReader(args.dir)
+
+        for line in reader.read_lines():
+            process_line(parsers, engine, stats, line)
+
+        stats.report()
+
     elif args.follow:
 
         reader = StreamReader(args.follow)
