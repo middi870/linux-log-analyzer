@@ -7,6 +7,7 @@ from reader.journal_reader import JournalReader
 
 from parser.auth_parser import AuthLogParser
 from parser.nginx_parser import NginxParser
+from parser.syslog_parser import SyslogParser
 
 from analyzer.rule_engine import RuleEngine
 from analyzer.statistics import Statistics
@@ -61,7 +62,8 @@ def main():
 
     parsers = [
         AuthLogParser(),
-        NginxParser()
+        NginxParser(),
+        SyslogParser()
     ]
 
     engine = RuleEngine("rules/rules.yaml")
