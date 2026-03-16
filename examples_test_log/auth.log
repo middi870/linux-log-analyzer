@@ -1,0 +1,8 @@
+Mar 17 14:22:10 server sshd[2451]: Failed password for root from 192.168.1.22
+Mar 17 14:22:11 server sshd[2452]: Failed password for root from 192.168.1.22
+Mar 17 14:22:12 server sshd[2453]: Failed password for root from 192.168.1.22
+Mar 17 14:22:13 server sshd[2454]: Accepted password for root from 192.168.1.22
+Mar 17 14:22:10 server sshd[2451]: Failed password for root from 192.168.1.22
+Mar 17 14:22:11 server sshd[2452]: Failed password for root from 192.168.1.22
+Mar 17 14:22:12 server sshd[2453]: Failed password for root from 192.168.1.22
+Mar 17 14:22:13 server sshd[2454]: Failed password for root from 192.168.1.22
