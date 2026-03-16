@@ -10,6 +10,7 @@ from parser.nginx_parser import NginxParser
 
 from analyzer.rule_engine import RuleEngine
 from analyzer.statistics import Statistics
+from analyzer.dashboard import Dashboard
 
 
 def process_line(parsers, engine, stats, line):
@@ -25,12 +26,6 @@ def process_line(parsers, engine, stats, line):
         return
 
     stats.process(event)
-
-    print(
-        f"[{event.event_type}] "
-        f"{event.timestamp} "
-        f"{event.source_ip}"
-    )
 
     alerts = engine.process(event)
 
@@ -55,9 +50,11 @@ def main():
     arg_parser.add_argument("--file", help="Analyze single log file")
     arg_parser.add_argument("--dir", help="Analyze directory of log files")
     arg_parser.add_argument("--follow", help="Follow log file in real-time")
+    arg_parser.add_argument("--journal", help="Read logs from systemd journal")
     arg_parser.add_argument(
-        "--journal",
-        help="Read logs from systemd journal (example: ssh, nginx)"
+        "--dashboard",
+        action="store_true",
+        help="Enable live terminal dashboard"
     )
 
     args = arg_parser.parse_args()
@@ -69,42 +66,62 @@ def main():
 
     engine = RuleEngine("rules/rules.yaml")
 
-    if args.file:
+    dashboard = None
 
-        reader = FileReader(args.file)
+    if args.dashboard:
+        dashboard = Dashboard(stats)
+        dashboard.start()
 
-        for line in reader.read_lines():
-            process_line(parsers, engine, stats, line)
+    try:
 
-        stats.report()
+        if args.file:
 
-    elif args.dir:
+            reader = FileReader(args.file)
 
-        reader = DirectoryReader(args.dir)
+            for line in reader.read_lines():
+                process_line(parsers, engine, stats, line)
 
-        for line in reader.read_lines():
-            process_line(parsers, engine, stats, line)
+            if not args.dashboard:
+                stats.report()
 
-        stats.report()
+        elif args.dir:
 
-    elif args.follow:
+            reader = DirectoryReader(args.dir)
 
-        reader = StreamReader(args.follow)
+            for line in reader.read_lines():
+                process_line(parsers, engine, stats, line)
 
-        for line in reader.follow():
-            process_line(parsers, engine, stats, line)
+            if not args.dashboard:
+                stats.report()
 
-    elif args.journal:
+        elif args.follow:
 
-        reader = JournalReader(args.journal)
+            reader = StreamReader(args.follow)
 
-        for line in reader.read_lines():
-            process_line(parsers, engine, stats, line)
+            for line in reader.follow():
+                process_line(parsers, engine, stats, line)
 
-        stats.report()
+        elif args.journal:
 
-    else:
-        arg_parser.print_help()
+            reader = JournalReader(args.journal)
+
+            for line in reader.read_lines():
+                process_line(parsers, engine, stats, line)
+
+            if not args.dashboard:
+                stats.report()
+
+        else:
+            arg_parser.print_help()
+
+    except KeyboardInterrupt:
+
+        print("\nStopping analyzer...")
+
+    finally:
+
+        if dashboard:
+            dashboard.stop()
 
 
 if __name__ == "__main__":
