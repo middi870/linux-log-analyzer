@@ -5,9 +5,10 @@ from reader.stream_reader import StreamReader
 from parser.auth_parser import AuthLogParser
 from parser.nginx_parser import NginxParser
 from analyzer.rule_engine import RuleEngine
+from analyzer.statistics import Statistics
 
 
-def process_line(parsers, engine, line):
+def process_line(parsers, engine, stats, line):
 
     event = None
 
@@ -18,6 +19,8 @@ def process_line(parsers, engine, line):
 
     if not event:
         return
+
+    stats.process(event)
 
     print(
         f"[{event.event_type}] "
@@ -38,6 +41,8 @@ def process_line(parsers, engine, line):
 
 
 def main():
+
+    stats = Statistics()
 
     arg_parser = argparse.ArgumentParser(
         description="Linux Log Analyzer"
@@ -60,14 +65,14 @@ def main():
         reader = FileReader(args.file)
 
         for line in reader.read_lines():
-            process_line(parsers, engine, line)
-
+            process_line(parsers, engine, stats, line)
+        stats.report()
     elif args.follow:
 
         reader = StreamReader(args.follow)
 
         for line in reader.follow():
-            process_line(parsers, engine, line)
+            process_line(parsers, engine, stats, line)
 
     else:
         arg_parser.print_help()
