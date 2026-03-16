@@ -3,12 +3,18 @@ import argparse
 from reader.file_reader import FileReader
 from reader.stream_reader import StreamReader
 from parser.auth_parser import AuthLogParser
+from parser.nginx_parser import NginxParser
 from analyzer.rule_engine import RuleEngine
 
 
-def process_line(parser, engine, line):
+def process_line(parsers, engine, line):
 
-    event = parser.parse(line)
+    event = None
+
+    for parser in parsers:
+        event = parser.parse(line)
+        if event:
+            break
 
     if not event:
         return
@@ -33,34 +39,38 @@ def process_line(parser, engine, line):
 
 def main():
 
-    parser = argparse.ArgumentParser(
+    arg_parser = argparse.ArgumentParser(
         description="Linux Log Analyzer"
     )
 
-    parser.add_argument("--file", help="Path to log file")
-    parser.add_argument("--follow", help="Follow log file")
+    arg_parser.add_argument("--file", help="Path to log file")
+    arg_parser.add_argument("--follow", help="Follow log file")
 
-    args = parser.parse_args()
+    args = arg_parser.parse_args()
 
-    log_parser = AuthLogParser()
-    engine = RuleEngine("rules/ssh_rules.yaml")
+    parsers = [
+        AuthLogParser(),
+        NginxParser()
+    ]
+
+    engine = RuleEngine("rules/rules.yaml")
 
     if args.file:
 
         reader = FileReader(args.file)
 
         for line in reader.read_lines():
-            process_line(log_parser, engine, line)
+            process_line(parsers, engine, line)
 
     elif args.follow:
 
         reader = StreamReader(args.follow)
 
         for line in reader.follow():
-            process_line(log_parser, engine, line)
+            process_line(parsers, engine, line)
 
     else:
-        parser.print_help()
+        arg_parser.print_help()
 
 
 if __name__ == "__main__":

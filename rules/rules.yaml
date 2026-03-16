@@ -1,0 +1,11 @@
+ssh_bruteforce:
+  event_type: AUTH_FAIL
+  threshold: 3
+  window: 60
+  alert: "Possible SSH brute force attack"
+
+nginx_error_spike:
+  event_type: HTTP_ERROR
+  threshold: 10
+  window: 30
+  alert: "Possible nginx error spike"

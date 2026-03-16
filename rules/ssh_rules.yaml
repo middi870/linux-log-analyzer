@@ -1,5 +1,0 @@
-ssh_bruteforce:
-  event_type: AUTH_FAIL
-  threshold: 3
-  window: 60
-  alert: "Possible SSH brute force attack"
