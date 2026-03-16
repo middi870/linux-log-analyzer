@@ -3,6 +3,7 @@ import argparse
 from reader.file_reader import FileReader
 from reader.stream_reader import StreamReader
 from reader.directory_reader import DirectoryReader
+from reader.journal_reader import JournalReader
 
 from parser.auth_parser import AuthLogParser
 from parser.nginx_parser import NginxParser
@@ -54,6 +55,10 @@ def main():
     arg_parser.add_argument("--file", help="Analyze single log file")
     arg_parser.add_argument("--dir", help="Analyze directory of log files")
     arg_parser.add_argument("--follow", help="Follow log file in real-time")
+    arg_parser.add_argument(
+        "--journal",
+        help="Read logs from systemd journal (example: ssh, nginx)"
+    )
 
     args = arg_parser.parse_args()
 
@@ -88,6 +93,15 @@ def main():
 
         for line in reader.follow():
             process_line(parsers, engine, stats, line)
+
+    elif args.journal:
+
+        reader = JournalReader(args.journal)
+
+        for line in reader.read_lines():
+            process_line(parsers, engine, stats, line)
+
+        stats.report()
 
     else:
         arg_parser.print_help()
